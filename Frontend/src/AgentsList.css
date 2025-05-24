@@ -1,0 +1,262 @@
+/* Agents List Container */
+.agents-list-container {
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  padding: 25px;
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto; /* For mobile responsiveness */
+}
+
+.agents-list-container h2 {
+  color: var(--dark-gray);
+  margin-bottom: 25px;
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agents-list-container h2::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 20px;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+}
+
+/* Add Agent Form */
+.add-agent-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+  align-items: end;
+}
+
+.add-agent-form input {
+  padding: 10px 15px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.add-agent-form input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 87, 184, 0.1);
+}
+
+.add-btn {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  height: 40px;
+}
+
+.add-btn:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Agents Table */
+.agents-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  min-width: 600px; /* Ensures table doesn't get too narrow */
+}
+
+.agents-table th, 
+.agents-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--medium-gray);
+  vertical-align: middle;
+}
+
+.agents-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: var(--dark-gray);
+  position: sticky;
+  top: 0;
+}
+
+.agents-table tr:last-child td {
+  border-bottom: none;
+}
+
+.agents-table tr:hover {
+  background-color: rgba(0, 87, 184, 0.03);
+}
+
+/* Edit Mode Inputs */
+.agents-table input {
+  padding: 8px 12px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--radius-sm);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.agents-table input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Action Buttons */
+.edit-btn, 
+.save-btn,
+.cancel-btn {
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  margin-right: 8px;
+}
+
+.edit-btn {
+  background-color: var(--warning-yellow);
+  color: var(--dark-gray);
+}
+
+.edit-btn:hover {
+  background-color: var(--warning-yellow-dark);
+  transform: translateY(-1px);
+}
+
+.save-btn {
+  background-color: var(--success-green);
+  color: var(--white);
+}
+
+.save-btn:hover {
+  background-color: var(--success-green-dark);
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background-color: var(--medium-gray);
+  color: var(--dark-gray);
+}
+
+.cancel-btn:hover {
+  background-color: var(--dark-gray);
+  color: var(--white);
+}
+
+.delete-btn {
+  background-color: var(--error-red);
+  color: var(--white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.delete-btn:hover {
+  background-color: var(--error-red-dark);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+  transform: translateY(-1px);
+}
+
+/* No Agents Message */
+.no-agents {
+  text-align: center;
+  color: var(--text-gray);
+  padding: 50px 0;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.no-agents::before {
+  content: '😕';
+  font-size: 40px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .add-agent-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .agents-list-container {
+    padding: 15px;
+  }
+  
+  .agents-table th, 
+  .agents-table td {
+    padding: 10px 8px;
+  }
+  
+  .edit-btn, 
+  .save-btn,
+  .cancel-btn,
+  .delete-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    margin-right: 5px;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.cancel-btn {
+  background: #f44336;
+  color: white;
+}

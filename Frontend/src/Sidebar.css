@@ -1,0 +1,78 @@
+/* Sidebar.css */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background: var(--sidebar-gradient);
+  color: var(--white);
+  padding: 25px 15px;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Ensure the logout button is at the bottom */
+  gap: 25px;
+  z-index: 90;
+  overflow-y: auto; /* Add scroll if content exceeds height */
+}
+
+.sidebar h2 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Push the logout button to the bottom */
+}
+
+.sidebar li {
+  padding: 14px 15px;
+  margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar li:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: translateX(5px);
+}
+
+.sidebar li a {
+  color: var(--white);
+  text-decoration: none;
+  flex-grow: 1;
+}
+
+.logout-button {
+  padding: 12px;
+  background-color: var(--error-red);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 20px; /* Add space between list and button */
+   margin-bottom: 50px;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logout-button:hover {
+  background-color: var(--error-red-dark);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}

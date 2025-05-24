@@ -1,0 +1,37 @@
+.welcome-content {
+display: flex;
+align-items: center;
+justify-content: center;
+height: 100%;
+background-color: #f4f7fc;
+}
+
+.welcome-box {
+text-align: center;
+background: white;
+padding: 40px;
+border-radius: 12px;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+max-width: 600px;
+}
+
+.welcome-box h1 {
+font-size: 32px;
+margin-bottom: 20px;
+color: #0052cc;
+}
+
+.username {
+color: #0073e6;
+}
+
+.welcome-text {
+font-size: 18px;
+margin-bottom: 10px;
+color: #333;
+}
+
+.welcome-sub {
+font-size: 16px;
+color: #555;
+}
