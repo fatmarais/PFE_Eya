@@ -109,7 +109,7 @@ const MessagesPage = () => {
 
   return (
     <div className="admin-container">
-      <Topbar />
+      {/* <Topbar />
       <div className="admin-content-wrapper">
         <Sidebar />
         
@@ -185,7 +185,7 @@ const MessagesPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -31,6 +31,7 @@ const AuthProvider = ({ children }) => {
         // Decode token to get user info
         const userData = res.user || JSON.parse(atob(res.token.split(".")[1]));
         setUser({
+          id:userData.id,
           email: userData.email,
           role: userData.role,
           nom: userData.nom,

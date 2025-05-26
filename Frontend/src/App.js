@@ -4,7 +4,6 @@ import Login from "./Login";
 import Signup from "./Signup";
 import Profile from "./Profile";
 import AgentsList from "./AgentList";
-import MessagesPage from "./Messages";
 import AuthProvider from "./contexts/AuthProvider";
 import PrivateRoute from "./PrivateRoute"; 
 import NetworkMap from "./host";
@@ -25,11 +24,10 @@ const App = () => {
           <Route path="/" element={<Home/>} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/host" element={< NetworkMap/>} />
+          <Route path="/host"  element={< NetworkMap/>} />
           <Route path="/Map" element={< Map/>} />
           
           
-          <Route path="/chat" element={< Chat/>} />
  
           {/* Protected Routes */}
           <Route path="/welcome" element={
@@ -54,7 +52,7 @@ const App = () => {
           
           <Route path="/chat" element={
             <PrivateRoute>
-              <MessagesPage />
+              <Chat/>
             </PrivateRoute>
           } />
           <Route path="/graph-view" element={
