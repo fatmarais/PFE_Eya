@@ -12,7 +12,7 @@ const AgentsList = () => {
     email: "",
     telephone: "",
     cin: "",
-    role:"agent",
+    role: "agent",
   });
   const [editingId, setEditingId] = useState(null);
   const [editAgent, setEditAgent] = useState({
@@ -41,61 +41,60 @@ const AgentsList = () => {
   }, []);
 
   const handleAdd = () => {
-  // Validate required fields
-  if (
-    !newAgent.nom ||
-    !newAgent.prenom ||
-    !newAgent.email ||
-    !newAgent.telephone ||
-    !newAgent.cin ||
-    !newAgent.password
-  ) {
-    alert("Veuillez remplir tous les champs requis.");
-    return;
-  }
-
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(newAgent.email)) {
-    alert("Veuillez entrer une adresse email valide.");
-    return;
-  }
-
-  // Validate telephone number (optional: regex for your region)
-  if (newAgent.telephone.length < 8) {
-    alert("Veuillez entrer un numéro de téléphone valide.");
-    return;
-  }
-
-  // Add agent to the backend
-  const addAgent = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/users/",
-        newAgent
-      );
-
-      // Update agents list and reset form
-      setAgents([...agents, response.data]);
-      setNewAgent({
-        nom: "",
-        prenom: "",
-        email: "",
-        telephone: "",
-        cin: "",
-        role: "agent",
-        password: "",
-      });
-      setIsModalOpen(false); // Close the modal
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de l'agent :", error);
-      alert("Une erreur s'est produite lors de l'ajout de l'agent.");
+    // Validate required fields
+    if (
+      !newAgent.nom ||
+      !newAgent.prenom ||
+      !newAgent.email ||
+      !newAgent.telephone ||
+      !newAgent.cin ||
+      !newAgent.password
+    ) {
+      alert("Veuillez remplir tous les champs requis.");
+      return;
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAgent.email)) {
+      alert("Veuillez entrer une adresse email valide.");
+      return;
+    }
+
+    // Validate telephone number (optional: regex for your region)
+    if (newAgent.telephone.length < 8) {
+      alert("Veuillez entrer un numéro de téléphone valide.");
+      return;
+    }
+
+    // Add agent to the backend
+    const addAgent = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/users/",
+          newAgent
+        );
+
+        // Update agents list and reset form
+        setAgents([...agents, response.data]);
+        setNewAgent({
+          nom: "",
+          prenom: "",
+          email: "",
+          telephone: "",
+          cin: "",
+          role: "agent",
+          password: "",
+        });
+        setIsModalOpen(false); // Close the modal
+      } catch (error) {
+        console.error("Erreur lors de l'ajout de l'agent :", error);
+        alert("Une erreur s'est produite lors de l'ajout de l'agent.");
+      }
+    };
+
+    addAgent();
   };
-
-  addAgent();
-};
-
 
   const startEdit = (agent) => {
     setEditingId(agent.id);
@@ -211,7 +210,7 @@ const AgentsList = () => {
                         className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                      <div>
+                    <div>
                       <label
                         className="block text-gray-600 font-medium mb-2"
                         htmlFor="password"
@@ -384,18 +383,20 @@ const AgentsList = () => {
                           <td>{agent.telephone}</td>
                           <td>{agent.cin}</td>
                           <td>
-                            <button
-                              onClick={() => startEdit(agent)}
-                              className="edit-btn"
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={() => handleDelete(agent.id)}
-                              className="delete-btn"
-                            >
-                              Supprimer
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => startEdit(agent)}
+                                className="edit-btn"
+                              >
+                                Modifier
+                              </button>
+                              <button
+                                onClick={() => handleDelete(agent.id)}
+                                className="delete-btn"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
                           </td>
                         </>
                       )}

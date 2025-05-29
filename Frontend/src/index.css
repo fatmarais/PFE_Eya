@@ -26,6 +26,15 @@ code {
   --dark-gray: #333333;
   --text-gray: #555555;
   --error-red: #ff4444;
+   --primary-color: #0057b8;
+  --primary-dark: #004494;
+  --white: #ffffff;
+  --dark-gray: #333333;
+  --medium-gray: #999999;
+  --warning-yellow: #f0ad4e;
+  --warning-yellow-dark: #ec971f;
+  --success-green: #4caf50;
+  --success-green-dark: #388e3c;
   --error-red-dark: #cc0000;
   --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.15);

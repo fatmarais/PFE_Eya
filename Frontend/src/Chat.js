@@ -1,187 +1,317 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { useAuth } from "./contexts/AuthProvider";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import './Messages.css';
+import "./Messages.css";
 
-
-function Chat() {
+const Chat = () => {
   const { user } = useAuth();
-  console.log("Current user in Chat:", user);
-
-  const socket = io("http://localhost:5000", {
-    withCredentials: true,
-    transports: ["websocket", "polling"],
-    query: { userId: user ? user.id : "anonymous" },
-  });
-
-  const [message, setMessage] = useState("");
+  const [socket, setSocket] = useState(null);
+  const [contacts, setContacts] = useState([]);
+  const [activeContact, setActiveContact] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
   const [unreadMessages, setUnreadMessages] = useState({});
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/users/");
-        console.log("Fetched users:", response.data);
-        setUsers(response.data);
-        const initialUnread = response.data.reduce(
-          (acc, user) => ({
-            ...acc,
-            [user.id]: 0,
-          }),
-          {}
-        );
-        setUnreadMessages(initialUnread);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des agents :", error);
-      }
-    };
+    scrollToBottom();
+  }, [messages]);
 
-    fetchAgents();
-  }, []);
-
-useEffect(() => {
-  socket.on("message", (payload) => {
-    console.log("Received message:", payload);
-
-    // Ignore the message if it's from the current user
-    if (user && payload.senderId == user.id) {
+  useEffect(() => {
+    if (!user) {
+      console.log("No user available, skipping socket connection");
       return;
     }
 
-    setMessages((prevMessages) => [...prevMessages, payload]);
+    const userId = String(user.id); // Ensure string
+    console.log("Connecting with userId:", userId, "Type:", typeof userId);
+    const newSocket = io("http://localhost:5000", {
+      withCredentials: true,
+      transports: ["websocket", "polling"],
+      query: { userId },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    });
 
-    // Update unread messages for the sender
-    if (user && payload.senderId && payload.senderId !== user.id) {
-      setUnreadMessages((prev) => {
-        const newUnread = {
+    newSocket.on("connect", () => {
+      console.log("Socket.IO connected with userId:", userId);
+      if (activeContact) {
+        axios
+          .get(`http://localhost:5000/api/messages/${userId}/${activeContact}`)
+          .then((response) => {
+            console.log(`Fetched ${response.data.length} messages on connect`);
+            setMessages(response.data || []);
+          })
+          .catch((error) => {
+            console.error("Error fetching messages on connect:", error);
+          });
+      }
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("Socket.IO disconnected");
+    });
+
+    // Heartbeat
+    const heartbeatInterval = setInterval(() => {
+      if (newSocket.connected) {
+        newSocket.emit("ping");
+      }
+    }, 30000);
+
+    setSocket(newSocket);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      newSocket.disconnect();
+      console.log("Socket disconnected");
+    };
+  }, [user, activeContact]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/users/");
+        setContacts(
+          response.data
+            .filter((u) => user && String(u.id) !== String(user.id))
+            .map((contact) => ({
+              id: String(contact.id), // Ensure string
+              name: `${contact.prenom} ${contact.nom}`,
+              lastMessage: "Commencez à discuter!",
+              time: "",
+              unread: 0,
+            }))
+        );
+      } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs:", error);
+      }
+    };
+
+    fetchUsers();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (activeContact && user) {
+        try {
+          const response = await axios.get(
+            `http://localhost:5000/api/messages/${String(user.id)}/${String(activeContact)}`
+          );
+          console.log(`Fetched ${response.data.length} messages for contact ${activeContact}`);
+          setMessages(response.data || []);
+        } catch (error) {
+          console.error("Erreur lors de la récupération des messages:", error);
+          setMessages([]);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
+  }, [activeContact, user]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("message", (payload) => {
+      console.log("Received message:", payload);
+      const { id, text, timestamp, senderId, recipientId, sent } = payload;
+
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.id === id)) {
+          console.log(`Duplicate message ID ${id} ignored`);
+          return prev;
+        }
+        return [
           ...prev,
-          [payload.senderId]: (prev[payload.senderId] || 0) + 1,
-        };
-        console.log("Updated unreadMessages:", newUnread);
-        return newUnread;
+          {
+            id,
+            senderId: String(senderId), // Ensure string
+            recipientId: String(recipientId), // Ensure string
+            text,
+            time: timestamp,
+            sent,
+          },
+        ];
       });
-    }
-  });
 
-  return () => {
-    socket.off("message");
-  };
-}, [user]);
+      if (String(senderId) !== String(activeContact)) {
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [senderId]: (prev[senderId] || 0) + 1,
+        }));
+      }
 
+      setContacts((prev) =>
+        prev.map((contact) =>
+          String(contact.id) === String(senderId)
+            ? { ...contact, lastMessage: text, time: timestamp }
+            : contact
+        )
+      );
+    });
 
-  const sendMessage = () => {
-    if (message.trim() && user) {
-      const timestamp = new Date().toLocaleString();
+    socket.on("pong", () => {
+      console.log("Received pong from server");
+    });
+
+    return () => {
+      socket.off("message");
+      socket.off("pong");
+    };
+  }, [socket, activeContact]);
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() && activeContact && user && socket && !isSending) {
+      setIsSending(true);
+      const messageId = Date.now().toString();
       const payload = {
-        text: message,
-        timestamp,
-        senderId: user.id,
+        text: newMessage,
+        senderId: String(user.id), // Ensure string
+        recipientId: String(activeContact), // Ensure string
+        messageId,
       };
-      // Emit to server
+
+      console.log("Sending message:", payload);
       socket.emit("message", payload);
-
-      // Add to local state for the sender
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { ...payload, id: "self" },
-      ]);
-
-      setMessage("");
+      setNewMessage("");
+      setTimeout(() => setIsSending(false), 500);
     }
   };
 
-  const handleUserClick = (userId) => {
-    setUnreadMessages((prev) => ({
-      ...prev,
-      [userId]: 0,
-    }));
+  const handleContactClick = (contactId) => {
+    setActiveContact(String(contactId)); // Ensure string
+    setUnreadMessages((prev) => ({ ...prev, [contactId]: 0 }));
   };
 
- return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Topbar */}
+  if (!user) return <div>Loading...</div>;
+
+  return (
+    <div className="admin-container">
       <Topbar />
-
-      {/* Main content area with Sidebar, User List, and Chat */}
-      <div className="flex flex-1">
-        {/* Sidebar */}
+      <div className="admin-content-wrapper">
         <Sidebar />
-<div className="main-content">
-        {/* User List and Chat */}
-        <div className="flex flex-1">
-          {/* User List */}
-          <div className="contacts-list w-1/4 bg-white shadow-lg overflow-y-auto">
-            {users
-              .filter((u) => user && u.id !== user.id) // Filter out the current user
-              .map((user) => (
-                <div
-                  key={user.id}
-                  className="contact-card p-4 border-b flex items-center cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleUserClick(user.id)}
-                >
-                  <div className="contact-avatar bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center mr-4">
-                    {user.nom.charAt(0)}
-                  </div>
-                  <div className="contact-info">
-                    <h3 className="font-bold text-sm">{user.prenom} {user.nom}</h3>
-                    {unreadMessages[user.id] > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                        {unreadMessages[user.id]}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </div>
-
-          {/* Chat Area */}
-          <div className="flex flex-1 flex-col items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-4">
-              <h1 className="text-xl font-bold text-center mb-4">Chat App</h1>
-              <div className="h-64 overflow-y-auto bg-gray-50 p-2 rounded-lg mb-4">
-                {messages.map((msg, index) => (
+        <div className="main-content">
+          <div className="messages-container">
+            <div className="contacts-sidebar">
+              <div className="sidebar-header">
+                <h2>Messages</h2>
+              </div>
+              <div className="contacts-list">
+                {contacts.map((contact) => (
                   <div
-                    key={index}
-                    className={`mb-2 p-2 rounded-lg flex flex-col ${
-                      user && msg.senderId === user.id
-                        ? "bg-blue-500 text-white self-end"
-                        : "bg-gray-200 text-black"
+                    key={contact.id}
+                    className={`contact-card ${
+                      String(activeContact) === String(contact.id) ? "active" : ""
                     }`}
+                    onClick={() => handleContactClick(contact.id)}
                   >
-                    <span>{msg.text}</span>
-                    <span className="text-xs opacity-75">{msg.timestamp}</span>
+                    <div className="contact-avatar">
+                      {contact.name.charAt(0)}
+                    </div>
+                    <div className="contact-info">
+                      <h3>{contact.name}</h3>
+                      <p className="last-message">{contact.lastMessage}</p>
+                    </div>
+                    <div className="message-meta">
+                      <span className="time">{contact.time}</span>
+                      {unreadMessages[contact.id] > 0 && (
+                        <span className="unread-count">
+                          {unreadMessages[contact.id]}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="flex-grow p-2 border rounded-lg focus:outline-none"
-                  placeholder="Type a message..."
-                  disabled={!user}
-                />
-                <button
-                  onClick={sendMessage}
-                  className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  disabled={!user}
-                >
-                  Send
-                </button>
-              </div>
+            </div>
+            <div className="chat-container">
+              {activeContact ? (
+                <>
+                  <div className="chat-header">
+                    <div className="contact-avatar large">
+                      {contacts
+                        .find((c) => String(c.id) === String(activeContact))
+                        ?.name.charAt(0)}
+                    </div>
+                    <h2>
+                      {contacts.find((c) => String(c.id) === String(activeContact))
+                        ?.name}
+                    </h2>
+                  </div>
+                  <div className="messages-area">
+                    {messages
+                      .filter(
+                        (msg) =>
+                          String(msg.senderId) === String(activeContact) ||
+                          String(msg.recipientId) === String(activeContact)
+                      )
+                      .map((message) => (
+                        <div
+                          key={message.id}
+                          className={`message ${
+                            message.sent ? "sent" : "received"
+                          }`}
+                        >
+                          <div className="message-content">
+                            <p>{message.text}</p>
+                            <span className="message-time">{message.time}</span>
+                          </div>
+                        </div>
+                      ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  <div className="message-input">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Tapez un message..."
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && !isSending) {
+                          handleSendMessage();
+                        }
+                      }}
+                    />
+                    <button onClick={handleSendMessage} disabled={isSending}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="no-chat-selected">
+                  <p>Sélectionnez une conversation pour commencer à discuter</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-      </div>
     </div>
   );
-}
+};
 
 export default Chat;

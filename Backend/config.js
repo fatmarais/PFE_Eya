@@ -4,7 +4,7 @@ module.exports = {
     
     USER: "root",
     
-    PASSWORD: "",
+    PASSWORD: "root",
     
     DB: "mon_projet_db",
     
